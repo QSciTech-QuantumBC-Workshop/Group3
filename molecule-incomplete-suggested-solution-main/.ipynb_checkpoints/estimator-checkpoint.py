@@ -114,15 +114,17 @@ class Estimator:
         for i, diag_observ in enumerate(diagonal_observables):
             counts = result.get_counts(circuits[i])
             counts_list.append(counts)
+#             expectation_value += Estimator.estimate_diagonal_pauli_string_expectation_value(diag_observ, counts)
             expectation_value += Estimator.estimate_diagonal_observable_expectation_value(diag_observ, counts)
 
         ################################################################################################################
 
 #         raise NotImplementedError()
 #         print(diagonal_observables)
-        print(counts_list)
+#         print(counts_list)
         self.counts_list = counts_list
         self.dig_ob = diagonal_observables
+        self.cir = circuits
 
         eval_time = time.time()-t0
 
@@ -182,17 +184,31 @@ class Estimator:
 #             circuits.append(state_circuit)
             
         #assembles the state circuit to each diagonazlized observable circuits (unique circuits in circuit list)
+#         for i in range(len(diag_qcircuit_list)):
+#             state_circuit.barrier()
+#             c = state_circuit + diag_qcircuit_list[i]
+#             c.measure_all()
+#             circuits.append(c)
+            
+            
         for i in range(len(diag_qcircuit_list)):
-            state_circuit.barrier()
+#             state_circuit.barrier()
             c = state_circuit + diag_qcircuit_list[i]
-            c.measure_all()
+#             c.measure_all()
             circuits.append(c)
+        
+        measured_circuits = list()
+        for i in range(len(circuits)):
+            circuits[i].measure_all()
+            measured_circuits.append(circuits[i])
+            
             
         ################################################################################################################
 
 #         raise NotImplementedError()
 
-        return circuits
+#         return circuits
+        return measured_circuits#circuits
 
     @staticmethod
     def diagonal_pauli_string_eigenvalue(diagonal_pauli_string: PauliString, state: str) -> float:
@@ -282,42 +298,43 @@ class Estimator:
             float: The expectation value of the Observable
         """
 
-        expectation_value = 0
+        expectation_value = 0.
 
         ################################################################################################################
         # YOUR CODE HERE
         # TO COMPLETE (after lecture on VQE)
         
-#         coeff_list = diagonal_observable.coefs
-#         coeff_list = (np.abs(coeff_list))
+        coeff_list = diagonal_observable.coefs
+        coeff_list = (np.abs(coeff_list))
         
         
-        t = diagonal_observable.coefs
-        if all(t.imag == 0.):           # if coefficients are all real, take absolute value (=|x|)
-            coeff_list = np.abs(t)
+#         t = diagonal_observable.coefs
+#         if all(t.imag == 0.):           # if coefficients are all real, take absolute value (=|x|)
+#             coeff_list = t.real
             
-        else:  
-            if all(t.imag != 0.):      # if coefficients are all imaginary, take the square of the absoulte value (=x^2 + y^2)
-                coeff_list = (np.abs(t))**2
+#         else:  
+#             if all(t.imag != 0.):      # if coefficients are all imaginary, take the square of the absoulte value (=x^2 + y^2)
+#                 coeff_list = (np.abs(t))**2
 
-            if any(t.imag != 0.):    # if some are real and some others are imaginary
-                coeff_list = list()
-                for i, cf in enumerate(t):
-                    if cf.imag == 0.:
-                        coeff_list.append(np.abs(cf))   #take absolute value (x)
-                    else:
-                        coeff_list.append((np.abs(cf))**2) #take the square of the absoulte value (=x^2 + y^2)
+#             if any(t.imag != 0.):    # if some are real and some others are imaginary
+#                 coeff_list = list()
+#                 for i, cf in enumerate(t):
+#                     if cf.imag == 0.:
+#                         coeff_list.append(t.real)   #if real take the real part
+#                     else:
+#                         coeff_list.append((np.abs(cf))**2) #take the square of the absoulte value (=x^2 + y^2)
 
-        
+        coeff_list = diagonal_observable.coefs.real
         diag_pauli_string_list = diagonal_observable.pauli_strings
         
         for i, p_string in enumerate(diag_pauli_string_list):
             expectation_value += coeff_list[i]*Estimator.estimate_diagonal_pauli_string_expectation_value(p_string, counts)
+#             print(expectation_value)
             
         ################################################################################################################
 
 #         raise NotImplementedError()
-
+#         print(diag_pauli_string_list[0])
         return expectation_value
 
     @staticmethod
