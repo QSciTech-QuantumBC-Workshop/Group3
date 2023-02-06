@@ -101,28 +101,11 @@ class Estimator:
         # (Optional) record the result with the record object
         # (Optional) monitor the time of execution
         
-        diagonal_observables = self.diagonal_observables
-        job = execute(circuits, backend = self.backend, **self.execute_opts)
-        result = job.result()
         
-#         i = 0
-#         counts = result.get_counts(circuits[i])
-#         for i, diag_observ in enumerate(diagonal_observables):
-#             expectation_value += Estimator.estimate_diagonal_observable_expectation_value(diag_observ, counts)
-            
-        counts_list = list()    
-        for i, diag_observ in enumerate(diagonal_observables):
-            counts = result.get_counts(circuits[i])
-            counts_list.append(counts)
-            expectation_value += Estimator.estimate_diagonal_observable_expectation_value(diag_observ, counts)
-
+        
         ################################################################################################################
 
 #         raise NotImplementedError()
-#         print(diagonal_observables)
-        print(counts_list)
-        self.counts_list = counts_list
-        self.dig_ob = diagonal_observables
 
         eval_time = time.time()-t0
 
@@ -174,14 +157,8 @@ class Estimator:
         # TO COMPLETE (after lecture on VQE)
        
         diag_qcircuit_list  = self.diagonalizing_circuits
+        
 
-        #assembles the state circuit to all the diagonalized oberervable circuits (non-unique circuits in circuit list)
-#         for i in range(len(diag_qcircuit_list)):
-#             diag_qcircuit_list[i].measure_all()
-#             state_circuit.compose(diag_qcircuit_list[i], inplace = True)
-#             circuits.append(state_circuit)
-            
-        #assembles the state circuit to each diagonazlized observable circuits (unique circuits in circuit list)
         for i in range(len(diag_qcircuit_list)):
             state_circuit.barrier()
             c = state_circuit + diag_qcircuit_list[i]

@@ -100,9 +100,29 @@ class Estimator:
         # B. Combine all the results into the expectation value of the observable (e.i. the energy)
         # (Optional) record the result with the record object
         # (Optional) monitor the time of execution
+        
+        diagonal_observables = self.diagonal_observables
+        job = execute(circuits, backend = self.backend, **self.execute_opts)
+        result = job.result()
+        
+#         i = 0
+#         counts = result.get_counts(circuits[i])
+#         for i, diag_observ in enumerate(diagonal_observables):
+#             expectation_value += Estimator.estimate_diagonal_observable_expectation_value(diag_observ, counts)
+            
+        counts_list = list()    
+        for i, diag_observ in enumerate(diagonal_observables):
+            counts = result.get_counts(circuits[i])
+            counts_list.append(counts)
+            expectation_value += Estimator.estimate_diagonal_observable_expectation_value(diag_observ, counts)
+
         ################################################################################################################
 
 #         raise NotImplementedError()
+#         print(diagonal_observables)
+        print(counts_list)
+        self.counts_list = counts_list
+        self.dig_ob = diagonal_observables
 
         eval_time = time.time()-t0
 
@@ -147,11 +167,27 @@ class Estimator:
         Returns:
             list<QuantumCircuit>: The quantum circuits to be executed.
         """
-
+        
         circuits = list()
         ################################################################################################################
         # YOUR CODE HERE
         # TO COMPLETE (after lecture on VQE)
+       
+        diag_qcircuit_list  = self.diagonalizing_circuits
+
+        #assembles the state circuit to all the diagonalized oberervable circuits (non-unique circuits in circuit list)
+#         for i in range(len(diag_qcircuit_list)):
+#             diag_qcircuit_list[i].measure_all()
+#             state_circuit.compose(diag_qcircuit_list[i], inplace = True)
+#             circuits.append(state_circuit)
+            
+        #assembles the state circuit to each diagonazlized observable circuits (unique circuits in circuit list)
+        for i in range(len(diag_qcircuit_list)):
+            state_circuit.barrier()
+            c = state_circuit + diag_qcircuit_list[i]
+            c.measure_all()
+            circuits.append(c)
+            
         ################################################################################################################
 
 #         raise NotImplementedError()
@@ -171,11 +207,28 @@ class Estimator:
             float: The eigenvalue
         """
 
-        eigenvalue = 0
+        eigenvalue = 0.
+
 
         ################################################################################################################
         # YOUR CODE HERE
         # TO COMPLETE (after lecture on VQE)
+        
+        #### See page 19 of VQE.pdf file.  <q | diagonal_pauli_string | q> = (-1)^(number of matching 1 and Z)
+        
+        basis_state = state
+        diag_pstring = diagonal_pauli_string.__str__()
+        
+        no_1_match_Z = 0.
+        for i, st in enumerate(diag_pstring):
+            if st == 'Z' and basis_state[i] == '1':
+                no_1_match_Z += 1.
+            else:
+                no_1_match_Z += 0.
+                
+        eigenvalue += (-1)**no_1_match_Z 
+                
+                
         ################################################################################################################
 
 #         raise NotImplementedError()
@@ -195,11 +248,20 @@ class Estimator:
             float: The expectation value of the Pauli string
         """
 
-        expectation_value = 0
+        expectation_value = 0.
 
         ################################################################################################################
         # YOUR CODE HERE
         # TO COMPLETE (after lecture on VQE)
+        
+        total_counts = 0.
+        for basis_state, count_value in counts.items():
+            eig_val = Estimator.diagonal_pauli_string_eigenvalue(diagonal_pauli_string, basis_state)
+            expectation_value += (count_value*eig_val)
+            total_counts += count_value
+            
+        expectation_value = expectation_value/total_counts
+        
         ################################################################################################################
 
 #         raise NotImplementedError()
@@ -225,6 +287,33 @@ class Estimator:
         ################################################################################################################
         # YOUR CODE HERE
         # TO COMPLETE (after lecture on VQE)
+        
+#         coeff_list = diagonal_observable.coefs
+#         coeff_list = (np.abs(coeff_list))
+        
+        
+        t = diagonal_observable.coefs
+        if all(t.imag == 0.):           # if coefficients are all real, take absolute value (=|x|)
+            coeff_list = np.abs(t)
+            
+        else:  
+            if all(t.imag != 0.):      # if coefficients are all imaginary, take the square of the absoulte value (=x^2 + y^2)
+                coeff_list = (np.abs(t))**2
+
+            if any(t.imag != 0.):    # if some are real and some others are imaginary
+                coeff_list = list()
+                for i, cf in enumerate(t):
+                    if cf.imag == 0.:
+                        coeff_list.append(np.abs(cf))   #take absolute value (x)
+                    else:
+                        coeff_list.append((np.abs(cf))**2) #take the square of the absoulte value (=x^2 + y^2)
+
+        
+        diag_pauli_string_list = diagonal_observable.pauli_strings
+        
+        for i, p_string in enumerate(diag_pauli_string_list):
+            expectation_value += coeff_list[i]*Estimator.estimate_diagonal_pauli_string_expectation_value(p_string, counts)
+            
         ################################################################################################################
 
 #         raise NotImplementedError()
@@ -251,6 +340,33 @@ class Estimator:
         ################################################################################################################
         # YOUR CODE HERE
         # TO COMPLETE (after lecture on VQE)
+        
+        #### Implementing slide 23 of VQE.pdf 
+        
+        string = pauli_string.__str__()  #convert PauliString object to actual string
+        string = string[::-1]       # reverse string
+        
+        new_string = ''
+        
+        for  i, st in enumerate(string):
+            if st == 'X':
+                new_string += 'Z'
+                diagonalizing_circuit.h(i)
+            if st == 'Y':
+                new_string += 'Z'
+                diagonalizing_circuit.sdg(i)
+                diagonalizing_circuit.h(i)
+            if st == 'Z':
+                new_string += st
+            if st == 'I':
+                new_string += st
+                
+        diagonal_pauli_string = PauliString.from_str(new_string[::-1])
+        
+        
+        
+        
+        
         ################################################################################################################
         
 #         raise NotImplementedError()
@@ -289,6 +405,15 @@ class BasicEstimator(Estimator):
         # YOUR CODE HERE
         # TO COMPLETE (after lecture on VQE)
         # Hint : the next method does the work for 1 PauliString + coef
+        pl_str_list = observable.pauli_strings
+        coeff_list  = observable.coefs
+        
+        
+        for i, ps in enumerate(pl_str_list):
+            diag_qcircuit, diag_ps = Estimator.diagonalizing_pauli_string_circuit(ps)
+            diagonalizing_circuits.append(diag_qcircuit)
+            diagonal_observables.append(coeff_list[i]*diag_ps)
+        
         ################################################################################################################
         
 #         raise NotImplementedError()
