@@ -1,5 +1,5 @@
 # molecule-incomplete-suggested-solution
-Incomplete version of the suggested solution to find the ground state of a molecule using quantum computing.
+A completed version of the solution to find the ground state of hydrogen molecule using quantum computing.
 
 Description of the files :
 - hamiltonian.py : This files defines the FermionicHamiltonian class and subclasses. You should be able to partially complete it after the lecture on second quantization. The 'to_linear_combinaison_pauli_string' methods can be completed after the lecture on mapping.
