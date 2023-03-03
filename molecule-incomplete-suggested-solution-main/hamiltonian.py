@@ -2,8 +2,8 @@
 hamiltonian.py - Define Hamiltonian
 
 Copyright 2020-2021 Maxime Dion <maxime.dion@usherbrooke.ca>
-This file has been modified by <Your,Name> during the
-QSciTech-QuantumBC virtual workshop on gate-based quantum computing.
+This file has been modified by Obinna Uzoh and Kithmin Wickremasinghe during the
+QSciTech-QuantumBC 2023 virtual workshop on quantum chemistry simulation.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
