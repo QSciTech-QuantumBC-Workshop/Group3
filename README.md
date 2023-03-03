@@ -1,8 +1,7 @@
 # H2 molecule-complete-solution
 
 Copyright 2020-2021 Maxime Dion <maxime.dion@usherbrooke.ca>
-This project has been modified by Obinna Uzoh during the
-QSciTech-QuantumBC 2023 virtual workshop on quantum chemistry simulation.
+This project has been modified by Obinna Uzoh and Kithmin Wickremasinghe during the QSciTech-QuantumBC 2023 virtual workshop on quantum chemistry simulation.
 
 This is a completed version of the solution to find the ground state of hydrogen molecule based on variational quantum eigen-solver (VQE) using quantum computing.
 
